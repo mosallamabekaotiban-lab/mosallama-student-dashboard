@@ -20,6 +20,7 @@ public class StudentDashboardServer {
 
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
         server.createContext("/api/grades", StudentDashboardServer::handleGrades);
+        server.createContext("/", StudentDashboardServer::handleStatic);
         server.setExecutor(Executors.newFixedThreadPool(8));
         server.start();
 
@@ -73,6 +74,29 @@ public class StudentDashboardServer {
             error.printStackTrace();
             send(exchange, 500, "{\"error\":\"" + escape(error.getMessage()) + "\"}");
         }
+
+         private static void handleStatic(HttpExchange exchange) throws IOException {
+        String path = exchange.getRequestURI().getPath();
+        if (path.equals("/") || path.isEmpty()) path = "/index.html";
+        Path filePath = Paths.get("." + path).normalize();
+        if (!Files.exists(filePath) || Files.isDirectory(filePath)) {
+            send(exchange, 404, "Not found");
+            return;
+        }
+        byte[] bytes = Files.readAllBytes(filePath);
+        exchange.getResponseHeaders().set("Content-Type", guessContentType(filePath.toString()));
+        exchange.sendResponseHeaders(200, bytes.length);
+        try (OutputStream output = exchange.getResponseBody()) {
+            output.write(bytes);
+        }
+    }
+
+    private static String guessContentType(String filename) {
+        if (filename.endsWith(".html")) return "text/html; charset=UTF-8";
+        if (filename.endsWith(".css")) return "text/css; charset=UTF-8";
+        if (filename.endsWith(".js")) return "application/javascript; charset=UTF-8";
+        return "application/octet-stream";
+    }
     }
 
     private static Grade gradeFromJson(String json) {
