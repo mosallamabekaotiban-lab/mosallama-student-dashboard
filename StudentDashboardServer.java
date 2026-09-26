@@ -74,8 +74,9 @@ public class StudentDashboardServer {
             error.printStackTrace();
             send(exchange, 500, "{\"error\":\"" + escape(error.getMessage()) + "\"}");
         }
+    }
 
-         private static void handleStatic(HttpExchange exchange) throws IOException {
+    private static void handleStatic(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
         if (path.equals("/") || path.isEmpty()) path = "/index.html";
         Path filePath = Paths.get("." + path).normalize();
@@ -96,7 +97,6 @@ public class StudentDashboardServer {
         if (filename.endsWith(".css")) return "text/css; charset=UTF-8";
         if (filename.endsWith(".js")) return "application/javascript; charset=UTF-8";
         return "application/octet-stream";
-    }
     }
 
     private static Grade gradeFromJson(String json) {
